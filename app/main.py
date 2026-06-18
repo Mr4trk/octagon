@@ -1,18 +1,18 @@
-from app.db.db import SessionLocal
-from app.db.crud import get_books, get_categories
+from fastapi import FastAPI
+from app.api import books, categories
+from app.db.db import Base, engine
 
-db = SessionLocal()
+Base.metadata.create_all(bind=engine)
 
-print("--- КАТЕГОРИИ ТОВАРОВ ---")
-categories = get_categories(db)
-for cat in categories:
-    print(f"ID: {cat.id} | Категория: {cat.title}")
+app = FastAPI(
+    title="Octagon Backend API",
+    description="API для работы с Книгами и Категориями",
+    version="1.0.0"
+)
 
-print("\n--- СПИСОК КНИГ ИЗ БАЗЫ ДАННЫХ ---")
-books = get_books(db)
-for book in books:
-    print(
-        f"Книга: '{book.title}' | Цена: {book.price} руб. | Категория ID: {book.category_id}"
-    )
+app.include_router(categories.router)
+app.include_router(books.router)
 
-db.close()
+@app.get("/health", tags=["System"])
+def health_check():
+    return {"status": "alive"}
